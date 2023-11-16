@@ -59,13 +59,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define DIO0_Pin GPIO_PIN_2
+#define DIO0_GPIO_Port GPIOA
+#define DIO0_EXTI_IRQn EXTI2_IRQn
+#define DIO_Pin GPIO_PIN_6
+#define DIO_GPIO_Port GPIOA
+#define DIO_EXTI_IRQn EXTI9_5_IRQn
 #define RST_Pin GPIO_PIN_0
 #define RST_GPIO_Port GPIOB
 #define NSS_Pin GPIO_PIN_1
 #define NSS_GPIO_Port GPIOB
-#define DIO0_Pin GPIO_PIN_2
-#define DIO0_GPIO_Port GPIOB
-#define DIO0_EXTI_IRQn EXTI2_IRQn
 
 /* USER CODE BEGIN Private defines */
 

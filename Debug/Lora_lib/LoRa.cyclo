@@ -13,7 +13,7 @@ LoRa.c:300:6:LoRa_write	1
 LoRa.c:322:6:LoRa_BurstWrite	3
 LoRa.c:350:9:LoRa_isvalid	1
 LoRa.c:367:9:LoRa_transmit	3
-LoRa.c:404:6:LoRa_startReceiving	1
-LoRa.c:420:9:LoRa_receive	3
-LoRa.c:454:5:LoRa_getRSSI	1
-LoRa.c:470:10:LoRa_init	3
+LoRa.c:407:6:LoRa_startReceiving	1
+LoRa.c:423:9:LoRa_receive	4
+LoRa.c:460:5:LoRa_getRSSI	1
+LoRa.c:476:10:LoRa_init	3

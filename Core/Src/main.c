@@ -45,6 +45,7 @@ SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
 LoRa my_lora;
+uint8_t lora_state = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,7 +58,7 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t *read_data;
+uint8_t read_data[20];
 uint8_t rx_count;
 uint8_t *send_data;
 uint8_t count =0;
@@ -70,6 +71,7 @@ int			RSSI;
 
 ////Handle recieve data;
 void handle_rx_data(uint8_t* receive_data, uint8_t count);
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
@@ -77,15 +79,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   /* NOTE: This function Should not be modified, when the callback is needed,
            the HAL_GPIO_EXTI_Callback could be implemented in the user file
    */
-  if(GPIO_Pin == DIO0_Pin){
-	  /// Check RxDone
-	  if((LoRa_read(&my_lora, RegIrqFlags)&0x40)!= 0){
+//  if(GPIO_Pin == DIO0_Pin)
+//  {
+//	  /// Check RxDone
+////	  if((LoRa_read(&my_lora, RegIrqFlags)&0x40)!= 0){
+////
+////
+////
+////	  }
+//	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+//	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+//  }
 
+  if(GPIO_Pin == DIO_Pin)
+    {
+  	  /// Check RxDone
+  //	  if((LoRa_read(&my_lora, RegIrqFlags)&0x40)!= 0){
+  //
+  //
+  //
+  //	  }
+  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+    }
 
-
-	  }
-
-  }
 }
 
 void handle_rx_data(uint8_t* receive_data, uint8_t count){
@@ -131,14 +148,15 @@ void handle_rx_data(uint8_t* receive_data, uint8_t count){
 		case '7':
 		case '8':
 		case '9':
-			rx_buff = (uint8_t*)realloc(rx_buff,(++rx_index)*sizeof(uint8_t));
+			rx_buff = (uint8_t*)realloc(rx_buff,(rx_index+2)*sizeof(uint8_t));
 			rx_buff[rx_index++] |= receive_data[i];
 			break;
 
 		}
 
 	}
-	free(receive_data);
+	free(rx_buff);
+
 
 
 }
@@ -152,28 +170,6 @@ void handle_rx_data(uint8_t* receive_data, uint8_t count){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-
-my_lora.CS_port		= NSS_GPIO_Port	;		my_lora.reset_port	= RST_GPIO_Port	;
-my_lora.CS_pin		= NSS_Pin		;		my_lora.reset_pin	= RST_Pin		;
-
-my_lora.DIO0_port	= DIO0_GPIO_Port;
-my_lora.reset_pin	= DIO0_Pin		;		my_lora.hSPIx		= &hspi1			;
-
-my_lora.frequency             = 434;             // default = 433 MHz
-my_lora.spredingFactor        = SF_9;            // default = SF_7
-my_lora.bandWidth             = BW_250KHz;       // default = BW_125KHz
-my_lora.crcRate               = CR_4_8;          // default = CR_4_5
-my_lora.power                 = POWER_17db;      // default = 20db
-my_lora.overCurrentProtection = 120;             // default = 100 mA
-my_lora.preamble              = 10;              // default = 8;
-
-LoRa_reset(&my_lora);
-LoRa_init(&my_lora);
-//
-LoRa_startReceiving(&my_lora);
-send_data[0] = 0X30;   /// slave address
-
 
   /* USER CODE END 1 */
 
@@ -197,6 +193,46 @@ send_data[0] = 0X30;   /// slave address
   MX_GPIO_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  my_lora = newLoRa();
+  my_lora.CS_port		= NSS_GPIO_Port	;		my_lora.reset_port	= RST_GPIO_Port	;
+  my_lora.CS_pin		= NSS_Pin		;		my_lora.reset_pin	= RST_Pin		;
+
+  my_lora.DIO0_port	= DIO_GPIO_Port;
+  my_lora.reset_pin	= DIO_Pin		;		my_lora.hSPIx		= &hspi1			;
+
+  my_lora.frequency             = 434;             // default = 433 MHz
+  my_lora.spredingFactor        = SF_9;            // default = SF_7
+  my_lora.bandWidth             = BW_250KHz;       // default = BW_125KHz
+  my_lora.crcRate               = CR_4_8;          // default = CR_4_5
+  my_lora.power                 = POWER_17db;      // default = 20db
+  my_lora.overCurrentProtection = 120;             // default = 100 mA
+  my_lora.preamble              = 10;              // default = 8;
+
+  //LoRa_reset(&my_lora);
+  if(LoRa_init(&my_lora)==LORA_OK)
+	  {
+	  	  lora_state = 1;
+	  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+	  	  HAL_Delay(500);
+	  };
+  if(LoRa_init(&my_lora)==LORA_NOT_FOUND)
+  	  {
+  	  	  lora_state = 2;
+//  	  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+//  	  	  HAL_Delay(500);
+  	  };
+  if(LoRa_init(&my_lora)==LORA_UNAVAILABLE)
+  	  {
+  	  	  lora_state = 3;
+//  	  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+//  	  	  HAL_Delay(500);
+  	  };
+  ////
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+
+  LoRa_startReceiving(&my_lora);
+  //send_data[0] = 0X30;   /// slave address
 
   /* USER CODE END 2 */
 
@@ -205,40 +241,47 @@ send_data[0] = 0X30;   /// slave address
   while (1)
   {
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
 	  ///-------------Transmit---------------///
-	  send_data = (uint8_t *)malloc(8*sizeof(uint8_t));
-	  if(send_data == NULL)
-		  return 0;
-
-	  send_data[0] = 0x30;
-	  for(count =1;count<4;count++){
-
-	  	send_data[count] =  48+count;
-	  }
-	  //send_data[1] = 100;
-	  //send_data[2] = (uint8_t)('v');
-	  //send_data[3] = 100;
-	  send_data[4] = (uint8_t)('v');
-
-	  for(count =5;count<8;count++){
-
-	  	  	send_data[count] =  48+count;
-	  	  }
-	  send_data[8] = (uint8_t)('p');
-
-	  LoRa_transmit(&my_lora, send_data, 10, 500);
-	  free(send_data);
+//	  send_data = (uint8_t *)malloc(9*sizeof(uint8_t));
+//	  if(send_data == NULL)
+//		  return 0;
+//	  //send_data = (uint8_t*)malloc(10*sizeof(uint8_t));
+//	  send_data[0] = 0x30;
+//	  for(count =1;count<4;count++){
+//
+//	  	send_data[count] =  48+count;
+//	  }
+//	  //send_data[1] = 100;
+//	  //send_data[2] = (uint8_t)('v');
+//	  //send_data[3] = 100;
+//	  send_data[4] = 'v' ;
+//
+//	  for(count =5;count<8;count++){
+//
+//	  	  	send_data[count] =  48+count;
+//	  	  }
+//	  send_data[8] = 'p';
+//	  if(LoRa_transmit(&my_lora, send_data, 9, 500))
+//	  {
+////		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+////	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+//	  }
+//
+//	  free(send_data);
 
 	  ///------------Recieve----------------///
+	  //read_data =(uint8_t*)malloc(2*sizeof(uint8_t));
 	  rx_count = LoRa_receive(&my_lora, read_data, 128);
 
 	  handle_rx_data(read_data, rx_count);
 
 
-	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
 	  //// free read_data after handling receive data ///
-	  free(read_data);
+	  //free(read_data);
 
 	  HAL_Delay(1000);
 
@@ -301,12 +344,13 @@ static void MX_SPI1_Init(void)
   /* USER CODE END SPI1_Init 1 */
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_SLAVE;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -341,7 +385,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, RST_Pin|NSS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -350,22 +400,38 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RST_Pin NSS_Pin */
-  GPIO_InitStruct.Pin = RST_Pin|NSS_Pin;
+  /*Configure GPIO pin : DIO0_Pin */
+  GPIO_InitStruct.Pin = DIO0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(DIO0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DIO_Pin */
+  GPIO_InitStruct.Pin = DIO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DIO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : RST_Pin NSS_Pin PB12 */
+  GPIO_InitStruct.Pin = RST_Pin|NSS_Pin|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DIO0_Pin */
-  GPIO_InitStruct.Pin = DIO0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(DIO0_GPIO_Port, &GPIO_InitStruct);
-
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

@@ -13,7 +13,7 @@
 ../Lora_lib/LoRa.c:322:6:LoRa_BurstWrite	32	static
 ../Lora_lib/LoRa.c:350:9:LoRa_isvalid	16	static
 ../Lora_lib/LoRa.c:367:9:LoRa_transmit	32	static
-../Lora_lib/LoRa.c:404:6:LoRa_startReceiving	16	static
-../Lora_lib/LoRa.c:420:9:LoRa_receive	48	static
-../Lora_lib/LoRa.c:454:5:LoRa_getRSSI	24	static
-../Lora_lib/LoRa.c:470:10:LoRa_init	24	static
+../Lora_lib/LoRa.c:407:6:LoRa_startReceiving	16	static
+../Lora_lib/LoRa.c:423:9:LoRa_receive	48	static
+../Lora_lib/LoRa.c:460:5:LoRa_getRSSI	24	static
+../Lora_lib/LoRa.c:476:10:LoRa_init	24	static

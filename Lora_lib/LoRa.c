@@ -373,6 +373,9 @@ uint8_t LoRa_transmit(LoRa* _LoRa, uint8_t* data, uint8_t length, uint16_t timeo
 	LoRa_write(_LoRa, RegFiFoAddPtr, read);
 	LoRa_write(_LoRa, RegPayloadLength, length);
 	LoRa_BurstWrite(_LoRa, RegFiFo, data, length);
+	read = LoRa_read(_LoRa,RegDioMapping1);
+	read = read | 0x40;
+	LoRa_write(_LoRa, RegDioMapping1,read);
 	LoRa_gotoMode(_LoRa, TRANSMIT_MODE);
 	while(1){
 		read = LoRa_read(_LoRa, RegIrqFlags);
@@ -422,8 +425,11 @@ uint8_t LoRa_receive(LoRa* _LoRa, uint8_t* data, uint8_t length_max){
 	uint8_t number_of_bytes;
 	uint8_t min = 0;
 
-//	for(int i=0; i<length; i++)
-//		data[i]=0;
+	for(int i=0; i<length_max; i++)
+		data[i]=0;
+
+	/// RxDone
+	LoRa_write(_LoRa, RegDioMapping1, 0x00);
 
 	LoRa_gotoMode(_LoRa, STNBY_MODE);
 	read = LoRa_read(_LoRa, RegIrqFlags);
@@ -433,7 +439,7 @@ uint8_t LoRa_receive(LoRa* _LoRa, uint8_t* data, uint8_t length_max){
 		read = LoRa_read(_LoRa, RegFiFoRxCurrentAddr);
 		LoRa_write(_LoRa, RegFiFoAddPtr, read);
 		min = length_max >= number_of_bytes ? number_of_bytes : length_max;
-		data = (uint8_t*)calloc(min,sizeof(uint8_t));
+		//data = (uint8_t*)realloc(data,min*sizeof(uint8_t));
 		for(int i=0; i<min; i++)
 			data[i] = LoRa_read(_LoRa, RegFiFo);
 	}
@@ -517,6 +523,8 @@ uint16_t LoRa_init(LoRa* _LoRa){
 			read = LoRa_read(_LoRa, RegDioMapping1);
 			data = read | 0x3F;
 			LoRa_write(_LoRa, RegDioMapping1, data);
+
+			read = LoRa_read(_LoRa, RegIrqFlagsMask);
 
 		// goto standby mode:
 			LoRa_gotoMode(_LoRa, STNBY_MODE);

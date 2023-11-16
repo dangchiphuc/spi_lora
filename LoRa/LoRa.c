@@ -422,8 +422,8 @@ uint8_t LoRa_receive(LoRa* _LoRa, uint8_t* data, uint8_t length_max){
 	uint8_t number_of_bytes;
 	uint8_t min = 0;
 
-//	for(int i=0; i<length; i++)
-//		data[i]=0;
+	for(int i=0; i<length_max; i++)
+		data[i]=0;
 
 	LoRa_gotoMode(_LoRa, STNBY_MODE);
 	read = LoRa_read(_LoRa, RegIrqFlags);
@@ -433,7 +433,7 @@ uint8_t LoRa_receive(LoRa* _LoRa, uint8_t* data, uint8_t length_max){
 		read = LoRa_read(_LoRa, RegFiFoRxCurrentAddr);
 		LoRa_write(_LoRa, RegFiFoAddPtr, read);
 		min = length_max >= number_of_bytes ? number_of_bytes : length_max;
-		data = (uint8_t*)calloc(min,sizeof(uint8_t));
+		//data = (uint8_t*)realloc(data,min*sizeof(uint8_t));
 		for(int i=0; i<min; i++)
 			data[i] = LoRa_read(_LoRa, RegFiFo);
 	}
